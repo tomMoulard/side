@@ -1,4 +1,11 @@
 version: 1.0
 provider:
   name: openfaas
-  gateway: http://localhost:8080
+  gateway: http://localhost
+
+functions:
+  webui:
+    lang: golang-middleware
+    handler: ./webui
+    image: tommoulard/side-webui:latest
+

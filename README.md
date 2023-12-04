@@ -17,3 +17,7 @@ The infrastructure is composed of:
  - a Nats queue
  - a Prometheus server
  - a MongoDB database
+
+## Display
+
+The webui is available at [http://localhost/](http://localhost).

@@ -60,11 +60,11 @@ stat:
 .PHONY: stat
 
 deploy: faas-cli
-	${FAAS_CLI} up -f side.yml --skip-push
+	${FAAS_CLI} up -f side.yml
 .PHONY: deploy
 
 logs: faas-cli
-	${FAAS_CLI} logs front
+	${FAAS_CLI} logs webui
 .PHONY: logs
 
 test:
