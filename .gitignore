@@ -1,0 +1,7 @@
+# openfaas tools
+arkade
+faas-cli
+template
+
+build
+.secrets

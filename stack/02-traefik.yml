@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: traefik-ingress-controller
+  namespace: default
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: default
+  labels:
+    app: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      volumes:
+        - name: traefik-configmap
+          configMap:
+            name: traefik-configmap
+      containers:
+        - name: traefik
+          image: traefik:v3.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log.level=DEBUG
+            - --accesslog
+            - --entrypoints.web.Address=:80
+            - --global.checknewversion=false
+            - --global.sendanonymoususage=false
+            - --providers.kubernetesingress
+            - --providers.file.directory=/config
+          ports:
+            - name: web
+              containerPort: 80
+          tty: true
+          volumeMounts:
+            - mountPath: "/config"
+              name: "traefik-configmap"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik
+  namespace: default
+spec:
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      name: web
+      port: 80
+    # - protocol: TCP
+      # name: websecure
+      # port: 443
+  selector:
+    app: traefik
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-configmap
+data:
+  dynamic.yml: |
+    http:
+      middlewares:
+        go-side:
+          addPrefix:
+            prefix: "/function/front"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openfaas
+  namespace: openfaas
+  annotations:
+    traefik.ingress.kubernetes.io/router.priority: "42"
+
+spec:
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /ui
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 8080
+          - path: /system
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 8080
+          - path: /function
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 8080
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp
+  namespace: openfaas
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: go-side@file
+    traefik.ingress.kubernetes.io/router.priority: "21"
+
+spec:
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 8080
