@@ -1,4 +1,6 @@
 all: stop start setup-faas traefik setup-mongo stat deploy
+all:
+	curl http://localhost/function/reset
 .PHONY: all
 
 TIMEOUT := "8760h" # 365 * 24
@@ -41,7 +43,7 @@ setup-faas: arkade
 setup-mongo: arkade
 	./arkade install mongodb \
 		--wait
-	${FAAS_CLI} secret create mongo-db-username --from-literal admin
+	${FAAS_CLI} secret create mongo-db-username --from-literal root
 	kubectl get secret --namespace default mongodb -o jsonpath="{.data.mongodb-root-password}" | \
 		base64 --decode | \
 		${FAAS_CLI} secret create mongo-db-password

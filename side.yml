@@ -9,3 +9,22 @@ functions:
     handler: ./webui
     image: tommoulard/side-webui:latest
 
+  reset:
+    lang: golang-middleware
+    handler: ./pkg/api/db/reset
+    image: tommoulard/side-db-reset:latest
+    environment:
+      MONGO_HOST: mongodb.default.svc.cluster.local:27017
+    secrets:
+      - mongo-db-username
+      - mongo-db-password
+
+  list:
+    lang: golang-middleware
+    handler: ./pkg/api/task/list
+    image: tommoulard/side-stask-list:latest
+    environment:
+      MONGO_HOST: mongodb.default.svc.cluster.local:27017
+    secrets:
+      - mongo-db-username
+      - mongo-db-password
